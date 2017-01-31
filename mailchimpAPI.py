@@ -46,6 +46,7 @@ def delete_from_list(list_id,email):
     subscriber_hash = convert_email_to_md5(email)
     ENDPOINT = "lists/" + list_id + "/members/" + subscriber_hash
 
+
     url = "%s%s" % (HOST,ENDPOINT)
 
     response = requests.delete(url,auth=('',API_KEY))
@@ -53,3 +54,4 @@ def delete_from_list(list_id,email):
 
 print (delete_from_list("d0c0c7514d","hamzanauman@hotmail.com"))
 #Testing change
+#Testing changes again
