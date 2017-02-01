@@ -161,6 +161,7 @@ def create_new_html_campaign(list_id, subject_line, title, from_name, reply_to):
     else:
         return response
 
+
 # print(create_new_html_campaign("d0c0c7514d", "Hello", "Test Campaign", "Hamza", "hn9@rice.edu"))
 
 
@@ -176,8 +177,36 @@ def set_campaign_content_html(campaign_id, html):
         "html": html
     }
 
-    response = requests.post(url, auth=('', API_KEY), data=json.dumps(params))
+    response = requests.put(url, auth=('', API_KEY), data=json.dumps(params))
 
-    return response.json()
+    return response
 
 #hello
+
+
+def get_campaign_id(name):
+    ENDPOINT = "campaigns"
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    response = requests.get(url, auth=('', API_KEY))
+
+    for campaign in response.json()["campaigns"]:
+        if campaign["settings"]["title"] == name:
+            return campaign["id"]
+
+
+# print(get_campaign_id("Test Campaign"))
+# print(set_campaign_content_html(get_campaign_id("Test Campaign"), "<p>Message goes here <p>"))
+
+
+def send_campaign(campaign_id):
+    ENDPOINT = "campaigns/" + campaign_id + "/actions/send"
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    response = requests.post(url, auth=('', API_KEY))
+
+    return response
+
+print(send_campaign(get_campaign_id("Test Campaign")))
