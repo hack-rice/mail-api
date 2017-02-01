@@ -198,7 +198,7 @@ def get_campaign_id(name):
 
 # print(get_campaign_id("Test Campaign"))
 # print(set_campaign_content_html(get_campaign_id("Test Campaign"), "<p>Message goes here <p>"))
-
+#
 
 def send_campaign(campaign_id):
     ENDPOINT = "campaigns/" + campaign_id + "/actions/send"
@@ -209,4 +209,20 @@ def send_campaign(campaign_id):
 
     return response
 
-print(send_campaign(get_campaign_id("Test Campaign")))
+# print(send_campaign(get_campaign_id("Test Campaign")))
+
+
+def schedule_campaign(campaign_id,date,hour):
+    ENDPOINT = "campaigns/" + campaign_id + "/actions/schedule"
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    params = {
+        "schedule_time": date + "T" + str(hour) + ":00:00+00:00"
+    }
+
+    response = requests.post(url, auth=('', API_KEY), data=json.dumps(params))
+
+    return response
+
+# print(schedule_campaign(get_campaign_id("Test Campaign"), "2017-02-01", 2))
