@@ -57,7 +57,7 @@ def create_new_list(name, company, address1, city, state, zip, permission_remind
     return response
 
 
-# print(create_new_list("Testing With API", "Hamza Inc", "6320 Main St", "Houston", "Texas", "77005", "Because f you!",
+# print(create_new_list("Testing With API", "Hamza Inc", "6320 Main St", "Houston", "Texas", "77005", "Because!",
 #                       "Hamza Nauman", "lalahamza@lala.com", "Hello Hello"))
 
 
@@ -127,7 +127,7 @@ def get_list_id(list_name):
     lists_info = get_lists_info()
 
     for list in lists_info:
-        if list["name"].lower() == list_name:
+        if list["name"].lower() == list_name.lower():
             return list["id"]
 
 # print(get_list_id("testing with api"))
@@ -185,6 +185,9 @@ def set_campaign_content_html(campaign_id, html):
 
 
 def get_campaign_id(name):
+    """
+    Returns the Campaign ID of the campaign with the given name. Letter case does not matter.
+    """
     ENDPOINT = "campaigns"
 
     url = "%s%s" % (HOST, ENDPOINT)
@@ -192,7 +195,7 @@ def get_campaign_id(name):
     response = requests.get(url, auth=('', API_KEY))
 
     for campaign in response.json()["campaigns"]:
-        if campaign["settings"]["title"] == name:
+        if campaign["settings"]["title"].lower() == name.lower():
             return campaign["id"]
 
 
@@ -201,6 +204,9 @@ def get_campaign_id(name):
 #
 
 def send_campaign(campaign_id):
+    """
+    Sends out a campaign with the given Campaign ID.
+    """
     ENDPOINT = "campaigns/" + campaign_id + "/actions/send"
 
     url = "%s%s" % (HOST, ENDPOINT)
@@ -213,6 +219,13 @@ def send_campaign(campaign_id):
 
 
 def schedule_campaign(campaign_id,date,hour):
+    """
+    Schedules a given campaign to be sent at a particular data and hour. Note that campaigns can only be
+    sent at each hour, and not in between, using this method.
+    :param campaign_id: Campaign ID of the campaign to be scheduled.
+    :param date: Date when campaign needs to be sent, in format YYYY-MM-DD
+    :param hour: Hour of the day when campaign is sent, in 24-hour format. 1PM would be 13.
+    """
     ENDPOINT = "campaigns/" + campaign_id + "/actions/schedule"
 
     url = "%s%s" % (HOST, ENDPOINT)
@@ -223,6 +236,23 @@ def schedule_campaign(campaign_id,date,hour):
 
     response = requests.post(url, auth=('', API_KEY), data=json.dumps(params))
 
+    return response.json()
+
+# print(schedule_campaign(get_campaign_id("Test Campaign"), "2017-02-02", 2))
+
+
+def unschedule_campaign(campaign_id):
+    """
+    Unschedule an already scheduled campaign with the given Campaign ID.
+    """
+    ENDPOINT = "campaigns/" + campaign_id + "/actions/unschedule"
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    response = requests.post(url, auth=('', API_KEY))
+
     return response
 
-# print(schedule_campaign(get_campaign_id("Test Campaign"), "2017-02-01", 2))
+
+# print(unschedule_campaign(get_campaign_id("Test Campaign")))
+
