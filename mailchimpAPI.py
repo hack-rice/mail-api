@@ -62,10 +62,32 @@ def create_new_list(name, company, address1, city, state, zip, permission_remind
     return response
 
 
-# print(create_new_list("Testing With API", "Hamza Inc", "6320 Main St", "Houston", "Texas", "77005", "Because f you!",
+# print(create_new_list("Testing With API", "Hamza Inc", "6320 Main St", "Houston", "Texas", "77005", "Because!",
 #                       "Hamza Nauman", "lalahamza@lala.com", "Hello Hello"))
 
+def convert_email_to_md5(email):
+    """
+    Converts an email address of a user to hash values using MD5 Algorithm. Used as a helper function for
+    delete_from_list.
+    """
+    m = hashlib.md5()
+    m.update(email.lower().encode())
+    return m.hexdigest()
 
+
+def delete_from_list(list_id, email):
+    """
+    Delete a given email address from the list with the given list ID.
+    """
+    subscriber_hash = convert_email_to_md5(email)
+    ENDPOINT = "lists/" + list_id + "/members/" + subscriber_hash
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    response = requests.delete(url, auth=('', API_KEY))
+    return response
+
+# print(delete_from_list("d0c0c7514d", "hamzanauman@hotmail.com"))
 def add_to_list(list_id, email, first_name, last_name):
     """
     Adds a subscriber to the specified list.
@@ -95,40 +117,18 @@ def add_to_reminder_list(email):
         post_response = add_to_list(REMINDER_LIST_ID, email, "Hack Rice ", "Organizer")
     return post_response
 
+# print (add_to_reminder_list("spencerc99@gmail.com"))
 
 def remove_from_reminder_list(email):
+    """
+    Outputs None on success.
+    """
     response = requests.get(REMINDER_URL, auth=('', API_KEY))
     post_response = None
     # Check if the email is in the list to be able to delete it
     if email in get_list_emails(response):
         post_reponse = delete_from_list(REMINDER_LIST_ID, email)
     return post_response
-
-
-def convert_email_to_md5(email):
-    """
-    Converts an email address of a user to hash values using MD5 Algorithm. Used as a helper function for
-    delete_from_list.
-    """
-    m = hashlib.md5()
-    m.update(email.lower().encode())
-    return m.hexdigest()
-
-
-def delete_from_list(list_id, email):
-    """
-    Delete a given email address from the list with the given list ID.
-    """
-    subscriber_hash = convert_email_to_md5(email)
-    ENDPOINT = "lists/" + list_id + "/members/" + subscriber_hash
-
-    url = "%s%s" % (HOST, ENDPOINT)
-
-    response = requests.delete(url, auth=('', API_KEY))
-    return response
-
-# print(delete_from_list("d0c0c7514d", "hamzanauman@hotmail.com"))
-
 
 def get_lists_info():
     """
@@ -152,7 +152,7 @@ def get_list_id(list_name):
     lists_info = get_lists_info()
 
     for list in lists_info:
-        if list["name"].lower() == list_name:
+        if list["name"].lower() == list_name.lower():
             return list["id"]
 
 # print(get_list_id("testing with api"))
@@ -210,6 +210,9 @@ def set_campaign_content_html(campaign_id, html):
 
 
 def get_campaign_id(name):
+    """
+    Returns the Campaign ID of the campaign with the given name. Letter case does not matter.
+    """
     ENDPOINT = "campaigns"
 
     url = "%s%s" % (HOST, ENDPOINT)
@@ -217,15 +220,18 @@ def get_campaign_id(name):
     response = requests.get(url, auth=('', API_KEY))
 
     for campaign in response.json()["campaigns"]:
-        if campaign["settings"]["title"] == name:
+        if campaign["settings"]["title"].lower() == name.lower():
             return campaign["id"]
 
-print(get_campaign_id("Apply Invite"))
-print(get_campaign_id("Test Campaign"))
+# print(get_campaign_id("Apply Invite"))
+# print(get_campaign_id("Test Campaign"))
 # print(set_campaign_content_html(get_campaign_id("Test Campaign"), "<p>Message goes here <p>"))
-
+#
 
 def send_campaign(campaign_id):
+    """
+    Sends out a campaign with the given Campaign ID.
+    """
     ENDPOINT = "campaigns/" + campaign_id + "/actions/send"
 
     url = "%s%s" % (HOST, ENDPOINT)
@@ -235,3 +241,41 @@ def send_campaign(campaign_id):
     return response
 
 # print(send_campaign(get_campaign_id("Test Campaign")))
+
+def schedule_campaign(campaign_id,date,hour):
+    """
+    Schedules a given campaign to be sent at a particular data and hour. Note that campaigns can only be
+    sent at each hour, and not in between, using this method.
+    :param campaign_id: Campaign ID of the campaign to be scheduled.
+    :param date: Date when campaign needs to be sent, in format YYYY-MM-DD
+    :param hour: Hour of the day when campaign is sent, in 24-hour format. 1PM would be 13.
+    """
+    ENDPOINT = "campaigns/" + campaign_id + "/actions/schedule"
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    params = {
+        "schedule_time": date + "T" + str(hour) + ":00:00+00:00"
+    }
+
+    response = requests.post(url, auth=('', API_KEY), data=json.dumps(params))
+
+    return response.json()
+
+# print(schedule_campaign(get_campaign_id("Test Campaign"), "2017-02-02", 2))
+
+
+def unschedule_campaign(campaign_id):
+    """
+    Unschedule an already scheduled campaign with the given Campaign ID.
+    """
+    ENDPOINT = "campaigns/" + campaign_id + "/actions/unschedule"
+
+    url = "%s%s" % (HOST, ENDPOINT)
+
+    response = requests.post(url, auth=('', API_KEY))
+
+    return response
+
+
+# print(unschedule_campaign(get_campaign_id("Test Campaign")))
