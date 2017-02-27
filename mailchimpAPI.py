@@ -10,8 +10,13 @@ import json
 # import sys
 import hashlib
 
-API_KEY = '5b304c282231deed394636cca6ff15e8-us14'
-HOST = "https://us14.api.mailchimp.com/3.0/"
+# API_KEY = '5b304c282231deed394636cca6ff15e8-us14'
+API_KEY = 'b91c082742d8f1ae8006737167647517-us12' # Hack Rice's API key
+HOST = "https://us12.api.mailchimp.com/3.0/"
+REMINDER_LIST_ID = '785a935423';
+REMINDER_ENDPOINT = "lists/" + REMINDER_LIST_ID + "/members"
+REMINDER_URL = "%s%s" % (HOST, REMINDER_ENDPOINT)
+
 
 
 def create_new_list(name, company, address1, city, state, zip, permission_reminder, from_name, from_email, subject):
@@ -77,8 +82,28 @@ def add_to_list(list_id, email, first_name, last_name):
     response = requests.post(url, auth=('', API_KEY), data=json.dumps(params))
     return response.json()
 
-
 # print (add_to_list("d0c0c7514d","hamzanauman@hotmail.com","Hamza","Nauman"))
+
+def get_list_emails(response):
+    return [member['email_address'] for member in response.json()['members']]
+
+def add_to_reminder_list(email):
+    response = requests.get(REMINDER_URL, auth=('', API_KEY));
+    post_response = None
+    # Check if the email is not in the list already
+    if email not in get_list_emails(response):
+        post_response = add_to_list(REMINDER_LIST_ID, email, "Hack Rice ", "Organizer")
+    return post_response
+
+
+def remove_from_reminder_list(email):
+    response = requests.get(REMINDER_URL, auth=('', API_KEY))
+    post_response = None
+    # Check if the email is in the list to be able to delete it
+    if email in get_list_emails(response):
+        post_reponse = delete_from_list(REMINDER_LIST_ID, email)
+    return post_response
+
 
 def convert_email_to_md5(email):
     """
@@ -195,8 +220,8 @@ def get_campaign_id(name):
         if campaign["settings"]["title"] == name:
             return campaign["id"]
 
-
-# print(get_campaign_id("Test Campaign"))
+print(get_campaign_id("Apply Invite"))
+print(get_campaign_id("Test Campaign"))
 # print(set_campaign_content_html(get_campaign_id("Test Campaign"), "<p>Message goes here <p>"))
 
 
@@ -209,4 +234,4 @@ def send_campaign(campaign_id):
 
     return response
 
-print(send_campaign(get_campaign_id("Test Campaign")))
+# print(send_campaign(get_campaign_id("Test Campaign")))
